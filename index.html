@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            * { overflow: hidden }
+            body { margin: 0; }
+            canvas { width: 100%; height: 100%; }
+        </style>
+    </head>
+    <body>
+        <!-- <div id="timer" class="timer" style="position:fixed; width: 100px; height: 50px; border: 3px solid white; top: 0; left: 40%; background: white">0</div> -->
+
+        <script src="./js/three.min.js" charset="utf-8"></script>
+        <script>
+        var //New THREE.js Scene
+            scene      = new THREE.Scene(),
+            //New THREE.js Camera (There's multiple but for now, we use this one)
+            //                                      ( FOV, Aspect Ratio (Generally want width/height), near clipping plane, far clipping plane )
+            camera     = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 ),
+            //Renderer, there's more than just WebGL but for now we use this one.
+            renderer   = new THREE.WebGLRenderer(),
+            //Clock
+            clock      = new THREE.Clock();
+
+        //Set the size of the renderer (width, height, optional boolean for keep size but smaller resolution);
+        renderer.setSize( window.innerWidth, window.innerHeight );
+        //Add it to the document
+        document.body.appendChild( renderer.domElement );
+
+        var baseGeo       = new THREE.SphereGeometry(0.3, 256),
+            sphereGeo       = new THREE.SphereGeometry(0.7, 256),
+            skeletGeo       = new THREE.SphereGeometry( 6, 8),
+            skeletGeo2      = new THREE.SphereGeometry( 4, 8),
+            skeletGeo3      = new THREE.SphereGeometry( 2, 8),
+            boxGeo          = new THREE.BoxGeometry(1,1,1),
+
+            materialBasic    = new THREE.MeshBasicMaterial({wireframe: false,color: 'blue'}),
+            materialSkeleton = new THREE.MeshNormalMaterial({wireframe: true}),
+            materialNormal   = new THREE.MeshNormalMaterial({wireframe: false});
+
+
+        var
+            sphere   = new THREE.Mesh( sphereGeo , materialNormal ),
+            skeleton = new THREE.Mesh( skeletGeo  , materialSkeleton ),
+            skeletoo = new THREE.Mesh( skeletGeo2 , materialSkeleton ),
+            skeletop = new THREE.Mesh( skeletGeo3 , materialSkeleton ),
+
+            baseX    = new THREE.Mesh( baseGeo   , materialNormal ),
+            orbitalX = new THREE.Mesh( sphereGeo    , materialNormal ),
+            orbitaNX = new THREE.Mesh( sphereGeo    , materialNormal ),
+
+            baseY    = new THREE.Mesh( baseGeo   , materialNormal ),
+            orbitalY = new THREE.Mesh( sphereGeo    , materialNormal ),
+            orbitaNY = new THREE.Mesh( sphereGeo    , materialNormal ),
+
+            baseZ    = new THREE.Mesh( baseGeo   , materialNormal ),
+            orbitalZ = new THREE.Mesh( sphereGeo    , materialNormal ),
+            orbitaNZ = new THREE.Mesh( sphereGeo    , materialNormal ),
+
+            baseXY   = new THREE.Mesh( baseGeo   , materialNormal ),
+            orbitaXY = new THREE.Mesh( sphereGeo    , materialNormal ),
+            orbitNXY = new THREE.Mesh( sphereGeo    , materialNormal );
+
+
+
+
+
+        scene.add(sphere);
+        sphere.add(skeleton);
+        sphere.add(skeletoo);
+        sphere.add(skeletop);
+
+        sphere.add(baseX);
+        baseX.add(orbitalX);
+        orbitalX.position.y = 2;
+        baseX.add(orbitaNX);
+        orbitaNX.position.y = -2;
+
+        sphere.add(baseY);
+        baseY.add(orbitalY);
+        orbitalY.position.x = -4;
+        baseY.add(orbitaNY);
+        orbitaNY.position.x = 4;
+
+        sphere.add(baseZ);
+        baseZ.add(orbitalZ);
+        orbitalZ.position.x = -6;
+        baseZ.add(orbitaNZ);
+        orbitaNZ.position.x = 6;
+
+        // sphere.add(baseXY);
+        // baseXY.rotation.z += 0.5;
+        // baseXY.add(orbitaXY);
+        // orbitaXY.position.x = -8;
+        // baseXY.add(orbitNXY);
+        // orbitNXY.position.x = 8;
+
+
+
+        // //Since camera spawns at [0,0,0], it would be inside the cube we made, so we set the camera away from the cube.
+        camera.position.z = 12;
+
+        ///////////////////////////////////////////////////
+        //                   VARIABLES                   //
+        ///////////////////////////////////////////////////
+        var check = {
+            mousedown : false,
+            reset     : false,
+            rVals     : {x:0, y: 0, z: 0}
+        }
+        var m = {
+            prev: {x: window.innerWidth/2, y: window.innerHeight/2}
+        }
+
+        var orbitSpeed = 0.03,
+            spinSpeed  = 0.01;
+
+
+
+        ///////////////////////////////////////////////////
+        //                 EVENT HANDLER                 //
+        ///////////////////////////////////////////////////
+        window.onresize = function(e) {
+            renderer.setSize( window.innerWidth, window.innerHeight );
+        }
+        document.onmousedown = function() {
+            check.mousedown = true;  }
+        document.onmouseup   = function() {
+            check.mousedown = false; }
+        document.onmousemove = function(e) {
+            if (check.mousedown) {
+                var curr = {
+                    x: e.pageX,
+                    y: e.pageY
+                }
+                sphere.rotation.x += (curr.y-m.prev.y)/100;
+                sphere.rotation.y += (curr.x-m.prev.x)/100;
+            }
+            m.prev.x = e.pageX;
+            m.prev.y = e.pageY;
+        }
+        document.onkeypress = function(e) {
+            if (e.keyCode == 32) {
+                // check.reset = true;
+                sphere.rotation.x = 0;
+                sphere.rotation.y = 0;
+                sphere.rotation.z = 0;
+            }
+        }
+        // document.onscroll = function(e) {
+        //     console.log(e);
+        // }
+
+
+        // //Creates a loop that renders at 60 times a second
+        function render() {
+            requestAnimationFrame( render );
+            renderer.render( scene, camera );
+
+            baseX.rotation.x += orbitSpeed;
+            baseY.rotation.y += orbitSpeed;
+            baseZ.rotation.z += orbitSpeed;
+            baseXY.rotation.x += orbitSpeed;
+            baseXY.rotation.y += orbitSpeed;
+
+            orbitalX.rotation.x += spinSpeed;
+            orbitaNX.rotation.x += spinSpeed;
+
+            orbitalY.rotation.y += spinSpeed;
+            orbitaNY.rotation.y += spinSpeed;
+
+            orbitalZ.rotation.z += spinSpeed;
+            orbitaNZ.rotation.z += spinSpeed;
+
+
+            if (!check.reset) {
+                check.rVals.x = scene.rotation.x;
+                check.rVals.y = scene.rotation.y;
+                check.rVals.z = scene.rotation.z;
+            }
+            // if (check.reset) {
+            //     if (scene.rotation.x > 0) { scene.rotation.x -= 0.005} else if (scene.rotation.x < 0) { scene.rotation.x += 0.005 }
+            //     if (scene.rotation.y > 0) { scene.rotation.y -= 0.005} else if (scene.rotation.y < 0) { scene.rotation.y += 0.005 }
+            //     if (scene.rotation.z > 0) { scene.rotation.z -= 0.005} else if (scene.rotation.z < 0) { scene.rotation.z += 0.005 }
+            //     if (scene.rotation.x == 0 && scene.rotation.y == 0 && scene.rotation.z == 0) { check.reset = false; }
+            // }
+        }
+        render();
+        </script>
+    </body>
+</html>
